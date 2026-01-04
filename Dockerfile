@@ -1,29 +1,32 @@
-# 1. Use Node.js 20 (Alpine is a lightweight version)
-FROM node:20-alpine
+# 1. Use Node 20 Slim (Debian based - better for Prisma)
+FROM node:20-slim
 
-# 2. Set the working directory inside the container
+# 2. Install OpenSSL (Required for Prisma)
+RUN apt-get update -y && apt-get install -y openssl
+
+# 3. Set working directory
 WORKDIR /app
 
-# 3. Copy package files first (Optimization: This layer is cached if packages don't change)
+# 4. Copy package files
 COPY package*.json ./
 
-# 4. Install dependencies (Clean install for production)
+# 5. Install dependencies
 RUN npm ci
 
-# 5. Copy the Prisma Schema specifically (Needed for generation)
+# 6. Copy Prisma schema
 COPY prisma ./prisma/
 
-# 6. Generate the Prisma Client
+# 7. Generate Prisma Client
 RUN npx prisma generate
 
-# 7. Copy the rest of the source code
+# 8. Copy source code
 COPY . .
 
-# 8. Build the TypeScript code into JavaScript
+# 9. Build TypeScript
 RUN npm run build
 
-# 9. Expose the port the app runs on
+# 10. Expose port
 EXPOSE 3000
 
-# 10. Start the server (Using the built JS files)
+# 11. Start server
 CMD ["npm", "start"]
